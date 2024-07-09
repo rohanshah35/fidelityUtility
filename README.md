@@ -1,1 +1,1 @@
-# fidelityStats
+Simple webscraping tool for Fidelity
