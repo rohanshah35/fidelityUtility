@@ -1,21 +1,27 @@
-import time
-from selenium import webdriver
+from webdriver import get_driver, terminate_driver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+driver = get_driver()
 
-def login():
+
+# Login function, handles MFA
+def login(username, password):
     try:
-        driver = webdriver.Chrome()
-        driver.get("https://login.fidelity.com/ftgw/Fas/Fidelity/RtlCust/Login/Init")
-        WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.ID, "dom-username-input"))).send_keys("username")
-        driver.find_element(By.ID, "dom-pswd-input").send_keys("pswd")
+
+        driver.get("https://digital.fidelity.com/prgw/digital/login/full-page")
+        WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.ID, "dom-username-input"))).send_keys(
+            username)
+        driver.find_element(By.ID, "dom-pswd-input").send_keys(password)
         driver.find_element(By.ID, "dom-login-button").click()
-        time.sleep(5)
+        WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.ID, "dom-push-primary-button"))).click()
+
+        print("Login successful")
+
+        # Keep browser open indefinitely for now
+        input("Press enter to continue...")
 
     except Exception as e:
-        print("Login failed")
-
-    finally:
-        driver.quit()
+        print("Login failed:", e)
+        terminate_driver(driver)
