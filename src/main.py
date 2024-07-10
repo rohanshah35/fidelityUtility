@@ -1,3 +1,5 @@
+# pip install -r requirements.txt
+
 from auth import login
 from funds import get_fund_holdings
 
