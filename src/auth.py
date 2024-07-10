@@ -16,10 +16,10 @@ def login(username, password):
         driver.find_element(By.ID, "dom-pswd-input").send_keys(password)
         driver.find_element(By.ID, "dom-login-button").click()
         WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.ID, "dom-push-primary-button"))).click()
-
+        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CLASS_NAME, "summary-print-area")))
         print("Login successful")
 
-        # Keep browser open indefinitely for now
+        # Keep browser open indefinitely
         input("Press enter to continue...")
 
     except Exception as e:
