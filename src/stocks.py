@@ -1,4 +1,4 @@
-# Data for stocks
+# Data utility for stocks
 
 from webdriver import get_driver, terminate_driver
 from selenium.webdriver.common.by import By
@@ -24,7 +24,6 @@ def get_stock_details(stock):
         url = f"https://digital.fidelity.com/prgw/digital/research/quote/dashboard/summary?symbol={stock}"
         driver.get(url)
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
-        st
         print(stock)
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'detailed-quote-body')))
         soup = BeautifulSoup(driver.page_source, 'html.parser')

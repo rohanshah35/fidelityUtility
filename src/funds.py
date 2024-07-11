@@ -1,4 +1,4 @@
-# Data for funds
+# Data utility for funds
 
 from webdriver import get_driver, terminate_driver
 from selenium.webdriver.common.by import By
