@@ -1,7 +1,8 @@
 # pip install -r requirements.txt
 
 from auth import login
-from funds import get_fund_details
+from funds import get_fund_details, get_fund_holdings
+from stocks import get_stock_details
 
 
 # Initialize project
@@ -20,7 +21,9 @@ def initialize():
 
     # example_func1()
     # example_func2()
-    get_fund_details('QQQM')
+    get_stock_details('NVDA')
+    get_fund_details('VOO')
+    get_fund_holdings('QQQM')
 
 
 initialize()

@@ -9,67 +9,72 @@ from bs4 import BeautifulSoup
 driver = get_driver()
 
 
+# Get fund profile
+def get_fund_profile(fund):
+    return 0
+
+
 # Get fund performance data at regular intervals
 def get_fund_performance(fund):
     return 0
 
 
-# Get fund profile data
-def get_fund_profile(fund):
-    try:
-        driver.get(f"https://digital.fidelity.com/prgw/digital/research/quote/dashboard/summary?symbol={fund}")
-
-    except Exception as e:
-        print("Getting fund profile failed:", e)
-        terminate_driver(driver)
-
-
-# Get fund detail data
+# Get fund specific details
 def get_fund_details(fund):
-    details = []
+    details = [fund]
 
     try:
-        driver.get(f"https://digital.fidelity.com/prgw/digital/research/quote/dashboard/summary?symbol={fund}")
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'info')))
+        url = f"https://digital.fidelity.com/prgw/digital/research/quote/dashboard/summary?symbol={fund}"
+        driver.get(url)
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
+        # Print fund
+        print(fund)
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'detailed-quote-body')))
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-        info_container = soup.find('div', class_='info')
+        quote_body = soup.find('div', class_='detailed-quote-body')
 
-        if info_container:
-            rows = info_container.find_all('div', class_=['item', 'item ng-star-inserted'])
+        if quote_body:
+            items = quote_body.find_all('div', class_=['item', 'item ng-star-inserted'])
 
-            for row in rows:
+            for i, item in enumerate(items, 1):
+                if i == 6:
+                    continue
+
                 row_data = []
-                left = row.find('div', class_=['left', 'left xl-label', 'left ng-star-inserted', 'left market-tier'])
-                as_of_date = row.find('div', class_='as-of-date ng-star-inserted')
-                right = row.find('div', class_=['right', 'right ng-star-inserted', 'right nre-green ng-star-inserted',
-                                                'right market-tier ng-star-inserted'])
+                left = item.find('div', class_='left')
+                as_of_date = item.find('div', class_='as-of-date ng-star-inserted')
+                right = item.find('div', class_=['right', 'right ng-star-inserted', 'right nre-green ng-star-inserted'])
 
                 if left:
-                    row_data.append(left.text.strip())
-
+                    left_text = left.text.strip()
+                    if "Close Popover" in left_text:
+                        left_text = "30-day SEC yield"
+                    row_data.append(left_text)
                 if as_of_date:
                     row_data.append(as_of_date.text.strip())
-
                 if right:
                     row_data.append(right.text.strip())
+                else:
+                    row_data.append("NO DATA")
 
                 if row_data:
                     details.append(row_data)
-                    print(f"Row {i}: {row_data}")
-
-            else:
-                print("No fund details found")
+                    # Print row
+                    print(f"{row_data}")
 
     except Exception as e:
         print("Getting fund details failed:", e)
         terminate_driver(driver)
+
+    if not details:
+        print("No fund details found")
 
     return details
 
 
 # Get fund holdings
 def get_fund_holdings(fund):
-    holdings = []
+    holdings = [fund]
 
     try:
         driver.get(f"https://research2.fidelity.com/fidelity/screeners/etf/etfholdings.asp?symbol={fund}&view=Holdings")
@@ -78,7 +83,8 @@ def get_fund_holdings(fund):
         table = soup.find('table', class_='results-table sortable')
 
         if table:
-            print(f'{fund}')
+            # Print fund
+            print(fund)
             headers = [th.text.strip() for th in table.find('thead').find_all('th')]
             print(headers)
             holdings.append(headers)
@@ -86,6 +92,7 @@ def get_fund_holdings(fund):
             for row in table.find('tbody').find_all('tr'):
                 cols = row.find_all('td')
                 data = [col.text.strip() for col in cols]
+                # Print row
                 print(data)
                 holdings.append(data)
         else:
