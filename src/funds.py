@@ -16,7 +16,40 @@ def get_fund_profile(fund):
 
 # Get fund performance data at regular intervals
 def get_fund_performance(fund):
-    return 0
+    performance = [fund]
+
+    try:
+        url = f"https://digital.fidelity.com/prgw/digital/research/quote/dashboard/summary?symbol={fund}"
+        driver.get(url)
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'totalReturns')))
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+        as_of_element = soup.find('span', class_='timestamp')
+        if as_of_element:
+            performance.append(as_of_element.text.strip())
+        else:
+            performance.append("No reference date")
+
+        total_returns = soup.find('div', class_='profile-card-item profile-performance')
+        if total_returns:
+            rows = total_returns.find_all('tr')
+            for row in rows:
+                year_element = row.find('th')
+                percentage_element = row.find('span', class_='text-pos')
+                if year_element and percentage_element:
+                    year = year_element.text.strip()
+                    percentage = percentage_element.text.strip()
+                    performance.append([year, percentage])
+
+    except Exception as e:
+        print(f"Getting fund performance failed:", e)
+
+    if len(performance) == 1:
+        print(f"No fund performance found for {fund}")
+
+    print(performance)
+    return performance
 
 
 # Get fund specific details
@@ -27,8 +60,6 @@ def get_fund_details(fund):
         url = f"https://digital.fidelity.com/prgw/digital/research/quote/dashboard/summary?symbol={fund}"
         driver.get(url)
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
-        # Print fund
-        print(fund)
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'detailed-quote-body')))
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         quote_body = soup.find('div', class_='detailed-quote-body')
@@ -59,8 +90,6 @@ def get_fund_details(fund):
 
                 if row_data:
                     details.append(row_data)
-                    # Print row
-                    print(f"{row_data}")
 
     except Exception as e:
         print("Getting fund details failed:", e)
@@ -69,6 +98,7 @@ def get_fund_details(fund):
     if not details:
         print("No fund details found")
 
+    print(details)
     return details
 
 
@@ -83,17 +113,12 @@ def get_fund_holdings(fund):
         table = soup.find('table', class_='results-table sortable')
 
         if table:
-            # Print fund
-            print(fund)
             headers = [th.text.strip() for th in table.find('thead').find_all('th')]
-            print(headers)
             holdings.append(headers)
 
             for row in table.find('tbody').find_all('tr'):
                 cols = row.find_all('td')
                 data = [col.text.strip() for col in cols]
-                # Print row
-                print(data)
                 holdings.append(data)
         else:
             print("Table not found in the HTML content")
@@ -102,4 +127,5 @@ def get_fund_holdings(fund):
         print("Getting fund holdings failed:", e)
         terminate_driver(driver)
 
+    print(holdings)
     return holdings

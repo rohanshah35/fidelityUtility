@@ -9,14 +9,45 @@ from bs4 import BeautifulSoup
 driver = get_driver()
 
 
+# Get stock profile
 def get_stock_profile(stock):
     return 0
 
 
+# Get stock performance data at regular intervals
+# Incomplete
 def get_stock_performance(stock):
-    return 0
+    performance = [stock]
+
+    try:
+        url = f"https://digital.fidelity.com/prgw/digital/research/quote/dashboard/summary?symbol={stock}"
+        driver.get(url)
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'pvd-card nre-price-performance-card xl-card')))
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+        total_returns = soup.find('div', class_='nre-card-body')
+        if total_returns:
+            rows = total_returns.find_all('tr')
+            for row in rows:
+                year_element = row.find('th')
+                percentage_element = row.find('span', class_='text-pos')
+                if year_element and percentage_element:
+                    year = year_element.text.strip()
+                    percentage = percentage_element.text.strip()
+                    performance.append([year, percentage])
+
+    except Exception as e:
+        print(f"Getting fund performance failed:", e)
+
+    if len(performance) == 1:
+        print(f"No fund performance found for {stock}")
+
+    print(performance)
+    return performance
 
 
+# Get stock specific details
 def get_stock_details(stock):
     details = [stock]
 
@@ -24,7 +55,6 @@ def get_stock_details(stock):
         url = f"https://digital.fidelity.com/prgw/digital/research/quote/dashboard/summary?symbol={stock}"
         driver.get(url)
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
-        print(stock)
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'detailed-quote-body')))
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         quote_body = soup.find('div', class_='detailed-quote-body')
@@ -78,8 +108,6 @@ def get_stock_details(stock):
 
                 if row_data:
                     details.append(row_data)
-                    # Print row
-                    print(f"{row_data}")
 
     except Exception as e:
         print("Getting stock details failed:", e)
@@ -88,4 +116,5 @@ def get_stock_details(stock):
     if not details:
         print("No stock details found")
 
+    print(details)
     return details

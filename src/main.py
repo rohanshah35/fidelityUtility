@@ -2,7 +2,7 @@
 # pip install -r requirements.txt
 
 from auth import login
-from funds import get_fund_details, get_fund_holdings
+from funds import get_fund_details, get_fund_holdings, get_fund_performance
 from stocks import get_stock_details
 
 
@@ -22,9 +22,13 @@ def initialize():
 
     # example_func1()
     # example_func2()
-    get_stock_details('NVDA')
-    get_fund_details('VOO')
-    get_fund_holdings('QQQM')
+    # get_fund_details('VOO')
+    # print()
+    get_fund_performance('VOO')
+    # print()
+    # get_fund_holdings('VOO')
+    # print()
+    # get_stock_details('NVDA')
 
 
 initialize()
