@@ -1,4 +1,4 @@
-# Data for user portfolio
+# Data utility for user portfolio
 
 from webdriver import get_driver, terminate_driver
 from selenium.webdriver.common.by import By
