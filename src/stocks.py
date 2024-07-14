@@ -11,11 +11,40 @@ driver = get_driver()
 
 # Get stock profile
 def get_stock_profile(stock):
-    return 0
+    profile = [stock]
+
+    try:
+        url = f"https://digital.fidelity.com/prgw/digital/research/quote/dashboard/summary?symbol={stock}"
+        driver.get(url)
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
+        WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.CLASS_NAME, 'pvd-card.nre-company-profile-card')))
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+        card = soup.find('div', class_='pvd-card nre-company-profile-card')
+        if card:
+            desc = card.find('div', class_='desc')
+            profile.append(desc.text.strip())
+
+        sector = card.find('div', class_='right sector-category')
+        sector = sector.find('span', class_='pvd-link__text')
+        profile.append(['Sector', sector.text.strip()])
+
+        industry = card.find('div', class_='right industry-category')
+        industry = industry.find('span', class_='pvd-link__text')
+        profile.append(['Industry', industry.text.strip()])
+
+        location = card.find('div', class_='right company-address ng-star-inserted')
+        profile.append(['Location', location.text.strip()])
+
+    except Exception as e:
+        print(f"Getting stock profile failed:", e)
+
+    print(profile)
+    return profile
 
 
 # Get stock performance data at regular intervals
-# Incomplete
 def get_stock_performance(stock):
     performance = [stock]
 
@@ -23,25 +52,35 @@ def get_stock_performance(stock):
         url = f"https://digital.fidelity.com/prgw/digital/research/quote/dashboard/summary?symbol={stock}"
         driver.get(url)
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'pvd-card nre-price-performance-card xl-card')))
+        WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.CLASS_NAME, 'pvd-card.nre-price-performance-card.xl-card')))
         soup = BeautifulSoup(driver.page_source, 'html.parser')
 
-        total_returns = soup.find('div', class_='nre-card-body')
-        if total_returns:
-            rows = total_returns.find_all('tr')
-            for row in rows:
-                year_element = row.find('th')
-                percentage_element = row.find('span', class_='text-pos')
-                if year_element and percentage_element:
-                    year = year_element.text.strip()
-                    percentage = percentage_element.text.strip()
-                    performance.append([year, percentage])
+        performance_card = soup.find('div', class_='pvd-card nre-price-performance-card xl-card')
+        if performance_card:
+            items = performance_card.find_all('div', class_='item')
+
+            for item in items:
+                row_data = []
+
+                left = item.find('div', class_='left')
+                right = item.find('div', class_='right nre-green')
+
+                if left:
+                    row_data.append(left.text.strip())
+                if right.text.strip() != '--':
+                    row_data.append(right.text.strip())
+                else:
+                    row_data.append(" ")
+
+                if row_data:
+                    performance.append(row_data)
 
     except Exception as e:
-        print(f"Getting fund performance failed:", e)
+        print(f"Getting stock performance failed:", e)
 
     if len(performance) == 1:
-        print(f"No fund performance found for {stock}")
+        print(f"No stock performance found for {stock}")
 
     print(performance)
     return performance
@@ -104,7 +143,7 @@ def get_stock_details(stock):
                         right_text = "Utilities"
                     row_data.append(right_text)
                 else:
-                    row_data.append("NO DATA")
+                    row_data.append(" ")
 
                 if row_data:
                     details.append(row_data)

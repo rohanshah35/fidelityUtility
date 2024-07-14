@@ -2,8 +2,9 @@
 # pip install -r requirements.txt
 
 from auth import login
-from funds import get_fund_details, get_fund_holdings, get_fund_performance
-from stocks import get_stock_details
+from funds import get_fund_details, get_fund_holdings, get_fund_performance, get_fund_profile
+from user_portfolio import get_user_accounts
+from stocks import get_stock_details, get_stock_profile, get_stock_performance
 
 
 # Initialize project
@@ -22,13 +23,7 @@ def initialize():
 
     # example_func1()
     # example_func2()
-    # get_fund_details('VOO')
-    # print()
-    get_fund_performance('VOO')
-    # print()
-    # get_fund_holdings('VOO')
-    # print()
-    # get_stock_details('NVDA')
+    get_fund_profile('VXUS')
 
 
 initialize()

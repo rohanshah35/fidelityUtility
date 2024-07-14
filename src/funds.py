@@ -11,7 +11,51 @@ driver = get_driver()
 
 # Get fund profile
 def get_fund_profile(fund):
-    return 0
+    profile = [fund]
+
+    try:
+        url = f"https://digital.fidelity.com/prgw/digital/research/quote/dashboard/summary?symbol={fund}"
+        driver.get(url)
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'profile-card-item')))
+
+        WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.CLASS_NAME, "stated-objectives-modal-link"))).click()
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        modal_content = soup.find('div', {'class': 'f2-app-dialog stated-objectives-modal'})
+        if modal_content:
+            objective_text = modal_content.find('div', {'class': 'body'}).find('p')
+            if objective_text:
+                profile.append(objective_text.text.strip())
+        WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.CLASS_NAME, "f2-dialog-close"))).click()
+
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+        # Currently not working
+        # holdings = soup.find('div', class_='profile-card-item profile-holdings')
+        # if holdings:
+        #     items = holdings.find_all('li')
+        #     for item in items:
+        #         name = item.find('h3').text.strip() if item.find('h3') else ''
+        #         value = item.find('span').text.strip() if item.find('span') else ''
+        #         profile.append([name, value])
+
+        structure = soup.find('div', class_='profile-card-item profile-structure')
+        if structure:
+            table = structure.find('table')
+            if table:
+                rows = table.find_all('tr')
+                for row in rows:
+                    name = row.find('th').text.strip() if row.find('th') else ''
+                    value = row.find('td').text.strip() if row.find('td') else ''
+                    profile.append([name, value])
+            else:
+                print("No table found in structure")
+
+    except Exception as e:
+        print(f"Getting fund profile failed:", e)
+
+    print(profile)
+    return profile
 
 
 # Get fund performance data at regular intervals
@@ -29,7 +73,7 @@ def get_fund_performance(fund):
         if as_of_element:
             performance.append(as_of_element.text.strip())
         else:
-            performance.append("No reference date")
+            performance.append(" ")
 
         total_returns = soup.find('div', class_='profile-card-item profile-performance')
         if total_returns:
@@ -86,7 +130,7 @@ def get_fund_details(fund):
                 if right:
                     row_data.append(right.text.strip())
                 else:
-                    row_data.append("NO DATA")
+                    row_data.append(" ")
 
                 if row_data:
                     details.append(row_data)
