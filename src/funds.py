@@ -30,6 +30,23 @@ def get_fund_profile(fund):
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
 
+        holdings_div = soup.find('div', class_='profile-card-item profile-holdings')
+        holdings = holdings_div.find('span', class_='icon overview-item holdings').find_next('span').text.strip()
+
+        country_div = soup.find('div', class_='profile-card-item profile-holdings')
+        country = country_div.find('span', class_='icon overview-item country').find_next('span').text.strip()
+
+        capexposure_div = soup.find('div', class_='profile-card-item profile-holdings')
+        capexposure = capexposure_div.find('span', class_='icon overview-item capexposure').find_next('span').text.strip()
+
+        sector_div = soup.find('div', class_='profile-card-item profile-holdings')
+        sector = sector_div.find('span', class_='icon overview-item sector').find_next('span').text.strip()
+
+        profile.append(["Top 3 Holdings", holdings])
+        profile.append(["Top Country", country])
+        profile.append(["Top Capitalization", capexposure])
+        profile.append(["Top Sector", sector])
+
         structure = soup.find('div', class_='profile-card-item profile-structure')
         if structure:
             table = structure.find('table')

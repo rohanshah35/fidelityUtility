@@ -45,11 +45,7 @@ def get_user_accounts():
     return accounts
 
 
-def get_user_positions():
-    return 0
-
-
-# Get user balances, balance day changes, available to trade amt, avaliable to withdraw amt, per account
+# Get user balances, balance day changes, available to trade amt, available to withdraw amt, per account
 def get_user_balances():
     balances = get_user_accounts()
 
@@ -63,24 +59,27 @@ def get_user_balances():
         page_source = driver.page_source
         soup = BeautifulSoup(page_source, "html.parser")
 
-        # total_balance = soup.find('div', class_='pvd-grid__item pvd-grid__item--column-span-6 pvd-grid__item--column-span-3-at-960 total-balance__value pvd-grid--disable-padding')
-        # balances.insert(0, ['Total Balance', total_balance.text.strip()])
-
         rows = soup.find_all('div', class_=['balances-all-accounts'])
 
         account_balances = []
         day_changes = []
-        available_to_trade_balances = [1, 2, 3, 4, 5, 5, 6]
-        available_to_withdraw_balances = [1, 2, 3, 4, 5, 6, 7]
+        available_to_trade_balances = []
+        available_to_withdraw_balances = []
 
         for row in rows:
-            account_balance = row.find('div', 'pvd-grid__item pvd-grid__item--column-span-6 pvd-grid__item--column-span-3-at-960 expand-header-section__center-content__amount')
+            account_balance = row.find('div',
+                                       'pvd-grid__item pvd-grid__item--column-span-6 pvd-grid__item--column-span-3-at-960 expand-header-section__center-content__amount')
             account_balances.append(account_balance.text.strip())
 
-            # available_to_trade = row.find('pvd-grid__item pvd-grid__item--column-span-6 group__amount pvd-grid__item--column-span-3-at-960')
-            # available_to_withdraw = row.find('pvd-grid__item pvd-grid__item--column-span-6 group__amount pvd-grid__item--column-span-3-at-960')
-            # available_to_trade_balances.append(available_to_trade.text.strip())
-            # available_to_withdraw_balances.append(available_to_withdraw.text.strip())
+            sub_balances = []
+            balance_divs = row.find_all('div', id='balance')
+            for balance_div in balance_divs:
+                balance_span = balance_div.find('span', class_='sr-only')
+                if balance_span:
+                    balance = balance_span.find_next('span').text.strip()
+                    sub_balances.append(balance)
+            available_to_trade_balances.append(sub_balances[0])
+            available_to_withdraw_balances.append(sub_balances[1])
 
         for i in range(len(account_balances)):
             numbers = re.findall(r'[+-]?\$\d+,\d+\.\d+|[+-]?\$\d+\.\d+', account_balances[i])
@@ -89,9 +88,22 @@ def get_user_balances():
                 account_balances[i] = account_balances[i].replace(numbers[1], '').strip()
 
         for i in range(len(balances)):
-            balances[i][1] = [['Balance', account_balances[i]], ['Day change', day_changes[i]],
-                              ['Available to trade', available_to_trade_balances[i]],
-                              ['Available to withdraw', available_to_withdraw_balances[i]]]
+            if not day_changes:
+                balances[i][1] = [['Balance', account_balances[i]], ['Day change', 'Past market time'],
+                                  ['Available to trade', available_to_trade_balances[i]],
+                                  ['Available to withdraw', available_to_withdraw_balances[i]]]
+            else:
+                balances[i][1] = [['Balance', account_balances[i]], ['Day change', day_changes[i]],
+                                  ['Available to trade', available_to_trade_balances[i]],
+                                  ['Available to withdraw', available_to_withdraw_balances[i]]]
+
+        total_balance = soup.find('div',
+                                  class_='pvd-grid__item pvd-grid__item--column-span-6 pvd-grid__item--column-span-3-at-960 total-balance__value pvd-grid--disable-padding')
+        split_values = total_balance.text.strip().split(' ')
+        if split_values[1] == '$0.00':
+            balances.insert(0, [['Total balance', split_values[0]], ['Total day change', 'Past market time']])
+        else:
+            balances.insert(0, [['Total balance', split_values[0]], ['Total day change', split_values[1]]])
 
     except Exception as e:
         print(f"Getting user balances failed:", e)
@@ -99,5 +111,9 @@ def get_user_balances():
     return balances
 
 
-def get_user_orders(account_number, time_period):
+def get_user_positions():
+    return 0
+
+
+def get_user_events():
     return 0
