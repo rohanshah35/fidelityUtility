@@ -143,7 +143,6 @@ def get_fund_details(fund):
 
     except Exception as e:
         print("Getting fund details failed:", e)
-        terminate_driver(driver)
 
     if not details:
         print("No fund details found")
@@ -174,6 +173,5 @@ def get_fund_holdings(fund):
 
     except Exception as e:
         print("Getting fund holdings failed:", e)
-        terminate_driver(driver)
 
     return holdings

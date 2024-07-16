@@ -148,7 +148,6 @@ def get_stock_details(stock):
 
     except Exception as e:
         print("Getting stock details failed:", e)
-        terminate_driver(driver)
 
     if not details:
         print("No stock details found")
