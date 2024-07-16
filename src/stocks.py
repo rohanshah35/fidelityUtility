@@ -40,7 +40,6 @@ def get_stock_profile(stock):
     except Exception as e:
         print(f"Getting stock profile failed:", e)
 
-    print(profile)
     return profile
 
 
@@ -82,7 +81,6 @@ def get_stock_performance(stock):
     if len(performance) == 1:
         print(f"No stock performance found for {stock}")
 
-    print(performance)
     return performance
 
 
@@ -155,5 +153,4 @@ def get_stock_details(stock):
     if not details:
         print("No stock details found")
 
-    print(details)
     return details

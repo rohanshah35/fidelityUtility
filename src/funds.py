@@ -30,15 +30,6 @@ def get_fund_profile(fund):
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
 
-        # Currently not working
-        # holdings = soup.find('div', class_='profile-card-item profile-holdings')
-        # if holdings:
-        #     items = holdings.find_all('li')
-        #     for item in items:
-        #         name = item.find('h3').text.strip() if item.find('h3') else ''
-        #         value = item.find('span').text.strip() if item.find('span') else ''
-        #         profile.append([name, value])
-
         structure = soup.find('div', class_='profile-card-item profile-structure')
         if structure:
             table = structure.find('table')
@@ -54,7 +45,6 @@ def get_fund_profile(fund):
     except Exception as e:
         print(f"Getting fund profile failed:", e)
 
-    print(profile)
     return profile
 
 
@@ -92,7 +82,6 @@ def get_fund_performance(fund):
     if len(performance) == 1:
         print(f"No fund performance found for {fund}")
 
-    print(performance)
     return performance
 
 
@@ -142,7 +131,6 @@ def get_fund_details(fund):
     if not details:
         print("No fund details found")
 
-    print(details)
     return details
 
 
@@ -171,5 +159,4 @@ def get_fund_holdings(fund):
         print("Getting fund holdings failed:", e)
         terminate_driver(driver)
 
-    print(holdings)
     return holdings
