@@ -29,7 +29,7 @@
 
 from auth import login
 from funds import get_fund_details, get_fund_holdings, get_fund_performance, get_fund_profile
-from user_portfolio import get_user_accounts, get_all_user_balances, get_all_user_positions, get_user_events, get_user_account_balance, get_user_account_positions
+from user_portfolio import get_user_accounts, get_all_user_balances, get_all_user_positions, get_user_account_balance, get_user_account_positions
 from stocks import get_stock_details, get_stock_profile, get_stock_performance
 
 
@@ -50,7 +50,8 @@ def initialize():
 
     # Modify functions you call here for what you want the program to do
 
-    get_fund_holdings('BND')
+    print(get_all_user_positions())
+    print(get_all_user_balances())
 
 
 initialize()

@@ -48,6 +48,11 @@ def get_user_accounts():
 
 
 # Get user balances, balance day changes, available to trade amt, available to withdraw amt, for all accounts
+# 4 dimensions
+# [0] - Selects the account
+# [1] - Selects list of balances in the account
+# [2] - Selects specific balance list
+# [3] - Selects specific balance information
 def get_all_user_balances():
     balances = get_user_accounts()
 
@@ -71,7 +76,8 @@ def get_all_user_balances():
         available_to_withdraw_balances = []
 
         for row in rows:
-            account_balance = row.find('div', 'pvd-grid__item pvd-grid__item--column-span-6 pvd-grid__item--column-span-3-at-960 expand-header-section__center-content__amount')
+            account_balance = row.find('div',
+                                       'pvd-grid__item pvd-grid__item--column-span-6 pvd-grid__item--column-span-3-at-960 expand-header-section__center-content__amount')
             account_balances.append(account_balance.text.strip())
 
             sub_balances = []
@@ -117,6 +123,12 @@ def get_all_user_balances():
 
 
 # Get user positions, and data about positions, for all accounts
+# 5 dimensions
+# [0] - Selects the account
+# [1] - Selects the list of holdings in the account
+# [2] - Selects specific holding
+# [3] - Selects the list holding detail information
+# [4] - Selects specific detail information
 def get_all_user_positions():
     positions = get_user_accounts()
 
@@ -155,35 +167,71 @@ def get_all_user_positions():
             if position_name and position_description:
                 account_positions.append([position_name.text.strip(), position_description.text.strip()])
 
-        # center_chart = soup.find('div', class_='ag-center-cols-viewport')
-        # rows = center_chart.find_all('div', class_=[
-        #     'ag-row-even ag-row-no-focus ag-row-not-inline-editing ag-row ag-row-level-0 ag-row-group ag-row-group-contracted posweb-row-account ag-row-position-absolute ag-row-first',
-        #     'ag-row-odd ag-row-no-focus ag-row-not-inline-editing ag-row ag-row-level-0 ag-row-group ag-row-group-contracted posweb-row-account ag-row-position-absolute',
-        #     'ag-row-even ag-row-no-focus ag-row-not-inline-editing ag-row ag-row-level-0 ag-row-group ag-row-group-contracted posweb-row-account ag-row-position-absolute',
-        #     'ag-row-even ag-row-no-focus ag-row-not-inline-editing ag-row ag-row-level-0 ag-row-group ag-row-group-contracted posweb-row-position ag-row-position-absolute',
-        #     'ag-row-odd ag-row-no-focus ag-row-not-inline-editing ag-row ag-row-level-0 ag-row-group ag-row-group-contracted posweb-row-position ag-row-position-absolute',
-        # ])
-        # position_metadata = []
-        #
-        # for row in rows:
-        #     metadata = row.find_all('span', class_='ag-cell-value')
-        #
-        #     for meta in metadata:
-        #         position_metadata.append(meta.text.strip())
-        #
-        #     # position_last_price = position_metadata[0]
-        #     # position_last_price_change = position_metadata[1]
-        #     # position_day_gain_loss = position_metadata[2]
-        #     # position_day_gain_loss_percent = position_metadata[3]
-        #     # position_total_gain_loss = position_metadata[4]
-        #     # position_total_grain_loss_percent = position_metadata[5]
-        #     # position_current_value = position_metadata[6]
-        #     # position_percent_of_account = position_metadata[7]
-        #     # position_quantity = position_metadata[8]
-        #     # position_average_cost_basis = position_metadata[9]
-        #     # position_cost_basis_total = position_metadata[10]
-        #
-        # print(position_metadata)
+        center_chart = soup.find('div', class_='ag-center-cols-viewport')
+        rows = center_chart.find_all('div', class_=[
+            'ag-row-even ag-row-no-focus ag-row-not-inline-editing ag-row ag-row-level-0 ag-row-group ag-row-group-contracted posweb-row-account ag-row-position-absolute ag-row-first',
+            'ag-row-odd ag-row-no-focus ag-row-not-inline-editing ag-row ag-row-level-0 ag-row-group ag-row-group-contracted posweb-row-account ag-row-position-absolute',
+            'ag-row-even ag-row-no-focus ag-row-not-inline-editing ag-row ag-row-level-0 ag-row-group ag-row-group-contracted posweb-row-account ag-row-position-absolute',
+            'ag-row-even ag-row-no-focus ag-row-not-inline-editing ag-row ag-row-level-0 ag-row-group ag-row-group-contracted posweb-row-position ag-row-position-absolute',
+            'ag-row-odd ag-row-no-focus ag-row-not-inline-editing ag-row ag-row-level-0 ag-row-group ag-row-group-contracted posweb-row-position ag-row-position-absolute',
+        ])
+
+        position_metadata_list = []
+
+        for row in rows:
+            position_metadata = []
+            metadata = row.find_all('span', class_='ag-cell-value')
+
+            for meta in metadata:
+                position_metadata.append(meta.text.strip())
+
+            position_metadata = list(filter(None, position_metadata))
+
+            result = []
+            temp = []
+            for item in position_metadata:
+                parts = re.findall(r'[-+]?\$?\d+(?:,\d+)*(?:\.\d+)?%?(?:\s*/\s*Share)?|\w+', item)
+
+                for part in parts:
+                    if part in ['+', '-']:
+                        temp.append(part)
+                    elif part.startswith('$') and temp:
+                        result.append(temp.pop(0) + part)
+                    elif part.endswith('%') and temp:
+                        result.append(temp.pop(0) + part)
+                    elif part in ['Low', 'High']:
+                        continue
+                    else:
+                        result.append(part)
+                temp.clear()
+
+            if position_metadata:
+                result[0] = ['Last Price', result[0]]
+                result[1] = ['Last Price Change', result[1]]
+                result[2] = ["$ Today's Gain/Loss", result[2]]
+                result[3] = ["% Today's Gain/Loss", result[3]]
+                result[4] = ["$ Total Gain/Loss", result[4]]
+                result[5] = ["% Total Gain/Loss", result[5]]
+                result[6] = ['Current Value', result[6]]
+                result[7] = ['% of Account', result[7]]
+                result[8] = ['Quantity', result[8]]
+                result[9] = ['Average Cost Basis', result[9]]
+                result[10] = ['Cost Basis Total', result[10]]
+                result[11] = ['52-Week Range', f'{result[11]}-{result[12]}']
+                result.pop(12)
+                position_metadata_list.append(result)
+
+        combined = []
+        metadata_index = 0
+
+        for position in account_positions:
+            if position:
+                combined.append(position + [position_metadata_list[metadata_index]])
+                metadata_index += 1
+            else:
+                combined.append([])
+
+        account_positions = combined
 
         split_arrays = [list(y) for x, y in itertools.groupby(account_positions, key=bool) if x]
 

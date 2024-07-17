@@ -1,5 +1,5 @@
 # fidelityUtility
-This is a webscraping tool for Fidelity
+This is a webscraping tool for Fidelity.
 
 Everything is run locally, so you are safe inputting your login credentials into the program.
 
