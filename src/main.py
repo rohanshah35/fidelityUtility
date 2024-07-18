@@ -50,8 +50,6 @@ def initialize():
 
     # Modify functions you call here for what you want the program to do
 
-    print(get_all_user_positions())
-    print(get_all_user_balances())
 
 
 initialize()
