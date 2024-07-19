@@ -1,6 +1,6 @@
 # Data utility for funds
 
-from webdriver import get_driver, terminate_driver
+from webdriver import get_driver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC

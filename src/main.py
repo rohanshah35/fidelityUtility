@@ -24,13 +24,17 @@
 # get_user_account_positions(account_number)
 #
 # stats:
-# standard_deviation()
-#
-#
+# total_standard_deviation()
+# account_standard_deviation()
+# total_beta()
+# account_beta()
+# total_sharpe_ratio()
+# account_sharpe_ratio()
 
 
 from auth import login
 from dashboard import dashboard
+
 import user_portfolio
 import funds
 import stocks

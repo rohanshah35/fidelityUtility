@@ -1,8 +1,9 @@
 # Data utility for user portfolio
+
 import itertools
 import re
 import time
-from webdriver import get_driver, terminate_driver
+from webdriver import get_driver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -242,12 +243,6 @@ def get_all_user_positions():
         print(f"Getting user positions failed:", e)
 
     return positions
-
-
-# Get user portfolio events for all accounts
-# def get_user_events():
-#     events = []
-#     return events
 
 
 # Get user account balance per account

@@ -15,7 +15,7 @@ options.add_experimental_option('useAutomationExtension', False)
 options.add_experimental_option('excludeSwitches', ['enable-automation'])
 
 # Headless
-# options.add_argument("--headless")
+options.add_argument("--headless")
 
 driver = webdriver.Chrome(options=options)
 driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
