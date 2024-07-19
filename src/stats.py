@@ -122,18 +122,60 @@ def standard_deviation():
 
 
 # Portfolio beta (52 wks)
-def beta(risk_free_rate):
-    return 0
+# Make sure the market benchmarks you input are 52-week ranges
+def beta(market_low, market_high):
+    data = process_positions(get_all_user_positions())
 
+    def calculate_volatility(low, high):
+        return (high - low) / ((high + low) / 2)
 
-# Portfolio alpha (52 wks)
-def alpha(risk_free_rate):
-    return 0
+    def extract_52_week_range(holding_data):
+        for item in holding_data:
+            if item[0] == '52-Week Range':
+                low, high = convert_range(item)
+                return low, high
+        return None, None
+
+    def extract_current_value(holding_data):
+        for item in holding_data:
+            if item[0] == 'Current Value':
+                return item[1]
+        return 0
+
+    total_portfolio_value = 0
+    weighted_volatilities = []
+
+    for account in data:
+        for holding in account[1]:
+            if len(holding) > 2:
+                holding_data = holding[2]
+                low, high = extract_52_week_range(holding_data)
+                current_value = extract_current_value(holding_data)
+
+                if low is not None and high is not None:
+                    volatility = calculate_volatility(low, high)
+                    weighted_volatilities.append((volatility, current_value))
+                    total_portfolio_value += current_value
+
+    portfolio_volatility = sum(v * (cv / total_portfolio_value) for v, cv in weighted_volatilities)
+
+    market_volatility = calculate_volatility(market_low, market_high)
+
+    estimated_correlation = 0.6
+
+    portfolio_beta = (portfolio_volatility / market_volatility) * estimated_correlation
+
+    return portfolio_beta
 
 
 # Portfolio Sharpe ratio (52 wks)
+# Risk free rate should be in the same time frame as returns
 def sharpe_ratio(risk_free_rate):
-    return 0
+    data = process_positions(get_all_user_positions())
+
+    sharpe = 0
+
+    return sharpe
 
 
 # Scans portfolio (funds + stocks), gives you dollar amount of each major stock you own (>$100)
