@@ -56,6 +56,7 @@ def initialize():
 
     print()
 
+    # The program does not run headless currently due to Fidelity bot detection
     # Modify functions you call here for what you want the program to do
 
     dashboard()

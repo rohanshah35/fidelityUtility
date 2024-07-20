@@ -13,7 +13,6 @@ driver = get_driver()
 
 # Prepares all account balance data for scripts
 def process_total_balances(balances):
-
     for item in balances:
         if isinstance(item, list):
             for sub_item in item:
@@ -69,7 +68,6 @@ def process_account_balances(balances):
 # Warning:
 # 52-week ranges are strings, make sure to use 'convert_range()' on '['52-Week Range', 'A-B']' to avoid errors
 def process_total_positions(positions):
-
     for account in positions:
         if isinstance(account, list) and len(account) > 1:
             holdings = account[1]
@@ -127,26 +125,41 @@ def convert_range(range):
     return low, high
 
 
+# More helper functions
+def calculate_volatility(low, high):
+    return (high - low) / ((high + low) / 2)
+
+
+def extract_52_week_range(holding_data):
+    for item in holding_data:
+        if item[0] == '52-Week Range':
+            return convert_range(item)
+    return None, None
+
+
+def extract_weight(holding_data):
+    for item in holding_data:
+        if item[0] == '% of Account':
+            return item[1] / 100
+    return None
+
+
+def extract_current_value(holding_data):
+    for item in holding_data:
+        if item[0] == 'Current Value':
+            return item[1]
+    return 0
+
+
+def calculate_return(holding_data):
+    current_price = next(item[1] for item in holding_data if item[0] == 'Last Price')
+    cost_basis = next(item[1] for item in holding_data if item[0] == 'Cost Basis Total')
+    return (current_price - cost_basis) / cost_basis
+
+
 # Total portfolio standard deviation (52 wks)
 def total_standard_deviation():
     data = process_total_positions(get_all_user_positions())
-
-    def calculate_volatility(low, high):
-        return (high - low) / ((high + low) / 2)
-
-    def extract_52_week_range(holding_data):
-        for item in holding_data:
-            if item[0] == '52-Week Range':
-                low, high = convert_range(item)
-                return low, high
-        return None, None
-
-    def extract_current_value(holding_data):
-        for item in holding_data:
-            if item[0] == 'Current Value':
-                return item[1]
-        return 0
-
     total_portfolio_value = 0
     volatilities = []
 
@@ -163,43 +176,13 @@ def total_standard_deviation():
                     total_portfolio_value += current_value
 
     weighted_avg_volatility = sum(v * (cv / total_portfolio_value) for v, cv in volatilities)
-
-    variance = sum((v - weighted_avg_volatility)**2 * (cv / total_portfolio_value) for v, cv in volatilities)
-
-    std_dev = math.sqrt(variance)
-
-    return std_dev
+    variance = sum((v - weighted_avg_volatility) ** 2 * (cv / total_portfolio_value) for v, cv in volatilities)
+    return math.sqrt(variance)
 
 
 # Account standard deviation (52 wks)
 def account_standard_deviation(account_number):
     data = process_account_positions(get_user_account_positions(account_number))
-
-    for i in range(len(data)):
-        if data[i][0] == account_number:
-            data = data[i]
-
-    def calculate_volatility(low, high):
-        return (high - low) / ((high + low) / 2)
-
-    def extract_52_week_range(holding_data):
-        for item in holding_data:
-            if item[0] == '52-Week Range':
-                low, high = convert_range(item)
-                return low, high
-        return None, None
-
-    def extract_weight(holding_data):
-        for item in holding_data:
-            if item[0] == '% of Account':
-                return item[1] / 100
-        return None
-
-    def extract_current_value(holding_data):
-        for item in holding_data:
-            if item[0] == 'Current Value':
-                return item[1]
-        return 0
 
     total_account_value = 0
     weighted_volatilities = []
@@ -217,35 +200,15 @@ def account_standard_deviation(account_number):
                 total_account_value += current_value
 
     weighted_avg_volatility = sum(v * (w * cv / total_account_value) for v, w, cv in weighted_volatilities)
-
-    variance = sum((v - weighted_avg_volatility)**2 * (w * cv / total_account_value) for v, w, cv in weighted_volatilities)
-
-    std_dev = math.sqrt(variance)
-
-    return std_dev
+    variance = sum(
+        (v - weighted_avg_volatility) ** 2 * (w * cv / total_account_value) for v, w, cv in weighted_volatilities)
+    return math.sqrt(variance)
 
 
 # Total portfolio beta (52 wks)
 # Make sure the market benchmarks you input are 52-week ranges
 def total_beta(market_high, market_low):
     data = process_total_positions(get_all_user_positions())
-
-    def calculate_volatility(low, high):
-        return (high - low) / ((high + low) / 2)
-
-    def extract_52_week_range(holding_data):
-        for item in holding_data:
-            if item[0] == '52-Week Range':
-                low, high = convert_range(item)
-                return low, high
-        return None, None
-
-    def extract_current_value(holding_data):
-        for item in holding_data:
-            if item[0] == 'Current Value':
-                return item[1]
-        return 0
-
     total_portfolio_value = 0
     weighted_volatilities = []
 
@@ -262,37 +225,15 @@ def total_beta(market_high, market_low):
                     total_portfolio_value += current_value
 
     portfolio_volatility = sum(v * (cv / total_portfolio_value) for v, cv in weighted_volatilities)
-
     market_volatility = calculate_volatility(market_low, market_high)
-
     estimated_correlation = 0.6
-
-    portfolio_beta = (portfolio_volatility / market_volatility) * estimated_correlation
-
-    return portfolio_beta
+    return (portfolio_volatility / market_volatility) * estimated_correlation
 
 
 # Account beta (52 wks)
 # Make sure the market benchmarks you input are 52-week ranges
 def account_beta(account_number, market_high, market_low):
     data = process_account_positions(get_user_account_positions(account_number))
-
-    def calculate_volatility(low, high):
-        return (high - low) / ((high + low) / 2)
-
-    def extract_52_week_range(holding_data):
-        for item in holding_data:
-            if item[0] == '52-Week Range':
-                low, high = convert_range(item)
-                return low, high
-        return None, None
-
-    def extract_current_value(holding_data):
-        for item in holding_data:
-            if item[0] == 'Current Value':
-                return item[1]
-        return 0
-
     total_account_value = 0
     weighted_volatilities = []
 
@@ -308,29 +249,15 @@ def account_beta(account_number, market_high, market_low):
                 total_account_value += current_value
 
     account_volatility = sum(v * (cv / total_account_value) for v, cv in weighted_volatilities)
-
     market_volatility = calculate_volatility(market_low, market_high)
-
     estimated_correlation = 0.6
-
-    account_beta = (account_volatility / market_volatility) * estimated_correlation
-
-    return account_beta
+    return (account_volatility / market_volatility) * estimated_correlation
 
 
 # Total portfolio Sharpe ratio (52 wks)
 # Risk free rate should be in the same time frame as returns
 def total_sharpe_ratio(risk_free_rate):
     data = process_total_positions(get_all_user_positions())
-
-    def calculate_return(holding_data):
-        for item in holding_data:
-            if item[0] == 'Last Price':
-                current_price = item[1]
-            elif item[0] == 'Cost Basis Total':
-                cost_basis = item[1]
-        return (current_price - cost_basis) / cost_basis
-
     total_portfolio_value = 0
     holdings = []
 
@@ -338,46 +265,23 @@ def total_sharpe_ratio(risk_free_rate):
         for holding in account[1]:
             if len(holding) > 2:
                 holding_data = holding[2]
-                holding_value = [item[1] for item in holding_data if item[0] == 'Current Value'][0]
+                holding_value = extract_current_value(holding_data)
                 total_portfolio_value += holding_value
                 holdings.append((holding_data, holding_value))
 
-    weighted_returns = 0
-    for holding_data, holding_value in holdings:
-        holding_return = calculate_return(holding_data)
-        weighted_returns += holding_return * (holding_value / total_portfolio_value)
-
-    portfolio_return = weighted_returns
-
+    weighted_returns = sum(
+        calculate_return(holding_data) * (holding_value / total_portfolio_value) for holding_data, holding_value in
+        holdings)
     portfolio_stdev = total_standard_deviation()
-
-    sharpe = (portfolio_return - risk_free_rate) / portfolio_stdev
-
-    return sharpe
+    return (weighted_returns - risk_free_rate) / portfolio_stdev
 
 
 # Account Sharpe ratio (52 wks)
 # Risk free rate should be in the same time frame as returns
 def account_sharpe_ratio(account_number, risk_free_rate):
     data = process_account_positions(get_user_account_positions(account_number))
-
-    def calculate_return(holding_data):
-        for item in holding_data:
-            if item[0] == 'Last Price':
-                current_price = item[1]
-            elif item[0] == 'Cost Basis Total':
-                cost_basis = item[1]
-        return (current_price - cost_basis) / cost_basis
-
-    def extract_current_value(holding_data):
-        for item in holding_data:
-            if item[0] == 'Current Value':
-                return item[1]
-        return 0
-
     total_account_value = 0
     weighted_returns = 0
-    weighted_squared_returns = 0
 
     for holding in data[1]:
         if len(holding) > 2:
@@ -387,12 +291,6 @@ def account_sharpe_ratio(account_number, risk_free_rate):
 
             total_account_value += current_value
             weighted_returns += holding_return * (current_value / total_account_value)
-            weighted_squared_returns += (holding_return ** 2) * (current_value / total_account_value)
-
-    account_return = weighted_returns
 
     std_dev = account_standard_deviation(account_number)
-
-    sharpe_ratio = (account_return - risk_free_rate) / std_dev if std_dev != 0 else 0
-
-    return sharpe_ratio
+    return (weighted_returns - risk_free_rate) / std_dev if std_dev != 0 else 0
