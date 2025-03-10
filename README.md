@@ -1,4 +1,7 @@
-# fidelityUtility
+# fidelityUtility [DEPRECATED]
+
+(Due to UI changes on the website, this doesn't work anymore! Feel free to fork the skeleton code and fix it up. This is a good lesson on the unreliability of web-scraping :/)
+
 This is a webscraping tool for Fidelity.
 
 Everything is run locally, so you are safe inputting your login credentials into the program.
